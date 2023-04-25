@@ -1,21 +1,56 @@
 import os
 import time
-from flask import Flask, request, jsonify, render_template
-from AirQualityMonitor import AirQualityMonitor
 from apscheduler.schedulers.background import BackgroundScheduler
 import redis
 import atexit
-from flask_cors import CORS, cross_origin
+import configparser
+import pytz
+import tzlocal
+from AirQualityMonitor import AirQualityMonitor
+from FlaskClient import FlaskClient
 
-app = Flask(__name__)
-cors = CORS(app)
-app.config['CORS_HEADERS'] = 'Content-Type'
-aqm = AirQualityMonitor()
+# application
 
-scheduler = BackgroundScheduler()
-scheduler.add_job(func=aqm.save_measurement_to_redis, trigger="interval", seconds=60)
-scheduler.start()
-atexit.register(lambda: scheduler.shutdown())
+def main():
+    #config
+    config = parse_config()
+
+    #hardware
+    aqm = AirQualityMonitor()
+
+    #logging
+    scheduler = BackgroundScheduler()
+    measureIntervalSeconds = config['DEFAULT']['MeasureIntervalSeconds']
+    scheduler.add_job(func=aqm.save_measurement_to_redis, trigger="interval", seconds=measureIntervalSeconds)
+    scheduler.start()
+    atexit.register(lambda: scheduler.shutdown())
+    
+    client = FlaskClient()
+
+
+def parse_config():
+    """create or read from app.ini file"""
+    CONFIG_FILE_NAME = './app.ini'
+    config = configparser.ConfigParser()
+    if(os.path.isfile(CONFIG_FILE_NAME)):
+        config.read(CONFIG_FILE_NAME)
+        return config
+    else:
+        config['DEFAULT'] = {'MeasureIntervalSeconds': '60', #take measurement every n seconds
+                     'AverageMeasurements': '5', #average n measurements before saving to redis and take latest timestamp TODO
+                     'InitialGridRangeCount': '30' #in the UI, initially show a max of measurements
+        }
+        with open(CONFIG_FILE_NAME, 'w') as configfile:
+            config.write(configfile)
+        return config
+
+def convert_datetime_local(dt):
+    """converts the timestamp to local"""
+    # get local timezone    
+    local_tz = tzlocal.get_localzone() 
+    print(f'Your timezone is {local_tz}.')
+    return local_tz.localize(dt)
+
 
 def reconfigure_data(measurement):
     """Reconfigures data for chart.js"""
@@ -47,34 +82,6 @@ def reconfigure_data(measurement):
         },
     }
 
-@app.route('/')
-def index():
-    """Index page for the application"""
-    context = {
-        'historical': reconfigure_data(aqm.get_last_n_measurements()),
-    }
-    return render_template('index.html', context=context)
-
-
-@app.route('/api/')
-@cross_origin()
-
-def api():
-    """Returns historical data from the sensor"""
-    context = {
-        'historical': reconfigure_data(aqm.get_last_n_measurements()),
-    }
-    return jsonify(context)
-
-
-@app.route('/api/now/')
-def api_now():
-    """Returns latest data from the sensor"""
-    context = {
-        'current': aqm.get_measurement(),
-    }
-    return jsonify(context)
-
 
 if __name__ == "__main__":
-    app.run(debug=True, use_reloader=False, host='0.0.0.0', port=int(os.environ.get('PORT', '8000')))
+    main()

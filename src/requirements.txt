@@ -5,4 +5,6 @@ redis
 APScheduler==3.7.0
 flask-cors
 python-aqi==0.6.1
-
+configparser
+pytz
+tzlocal
