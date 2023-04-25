@@ -1,8 +1,9 @@
 from flask_cors import CORS, cross_origin
 from flask import Flask, request, jsonify, render_template
+from util import reconfigure_data
 
 class FlaskClient():
-    
+
     app = Flask(__name__)
 
     def __init__(self):
@@ -10,6 +11,9 @@ class FlaskClient():
         self.app.config['CORS_HEADERS'] = 'Content-Type'
 
         self.app.run(debug=True, use_reloader=False, host='0.0.0.0', port=int(os.environ.get('PORT', '8000')))
+
+
+  
 
     @app.route('/')
     def index():

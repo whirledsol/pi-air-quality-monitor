@@ -36,8 +36,10 @@ class AirQualityMonitor():
             'measurement': self.meas
         }
 
+
     def save_measurement_to_redis(self):
         """Saves measurement to redis db"""
+        #TODO average
         redis_client.lpush('measurements', json.dumps(self.get_measurement(), default=str))
 
     def get_last_n_measurements(self):

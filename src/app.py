@@ -1,11 +1,8 @@
 import os
-import time
 from apscheduler.schedulers.background import BackgroundScheduler
 import redis
 import atexit
 import configparser
-import pytz
-import tzlocal
 from AirQualityMonitor import AirQualityMonitor
 from FlaskClient import FlaskClient
 
@@ -44,43 +41,10 @@ def parse_config():
             config.write(configfile)
         return config
 
-def convert_datetime_local(dt):
-    """converts the timestamp to local"""
-    # get local timezone    
-    local_tz = tzlocal.get_localzone() 
-    print(f'Your timezone is {local_tz}.')
-    return local_tz.localize(dt)
 
 
-def reconfigure_data(measurement):
-    """Reconfigures data for chart.js"""
-    current = int(time.time())
-    measurement = measurement[:30]
-    measurement.reverse()
-    return {
-        'labels': [x['measurement']['timestamp'] for x in measurement],
-        'aqi': {
-            'label': 'aqi',
-            'data': [x['measurement']['aqi'] for x in measurement],
-            'backgroundColor': '#181d27',
-            'borderColor': '#181d27',
-            'borderWidth': 3,
-        },
-        'pm10': {
-            'label': 'pm10',
-            'data': [x['measurement']['pm10'] for x in measurement],
-            'backgroundColor': '#cc0000',
-            'borderColor': '#cc0000',
-            'borderWidth': 3,
-        },
-        'pm2': {
-            'label': 'pm2.5',
-            'data': [x['measurement']['pm2.5'] for x in measurement],
-            'backgroundColor': '#42C0FB',
-            'borderColor': '#42C0FB',
-            'borderWidth': 3,
-        },
-    }
+
+
 
 
 if __name__ == "__main__":
