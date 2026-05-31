@@ -6,7 +6,7 @@ from AirQualityMonitor import AirQualityMonitor
 from flask_cors import CORS, cross_origin
 from flask import Flask, request, jsonify, render_template
 from util import reconfigure_data,parse_config
-
+import time
 
 #config
 config = parse_config()

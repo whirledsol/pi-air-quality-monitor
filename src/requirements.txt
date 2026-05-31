@@ -1,10 +1,11 @@
-sds011==0.2.0
+#sds011==0.2.0
 ipython
 flask
 redis
-APScheduler==3.7.0
+APScheduler==3.11.2
 flask-cors
 python-aqi==0.6.1
 configparser
 pytz
 tzlocal
+pyserial
