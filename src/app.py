@@ -12,7 +12,8 @@ import time
 config = parse_config()
 
 #hardware
-aqm = AirQualityMonitor()
+serialPath = config['DEFAULT']['serialpath']
+aqm = AirQualityMonitor(serialPath)
 
 #logging
 scheduler = BackgroundScheduler()
@@ -70,19 +71,20 @@ def reconfigure_data(measurement):
 @app.route('/')
 def index():
     """Index page for the application"""
-    print('index')
-    context = {
-        'historical': reconfigure_data(aqm.get_last_n_measurements()),
-    }
-    return render_template('index.html', context=context)
+    return render_template('index.html')
 
 
 @app.route('/api/')
 @cross_origin()
 def api():
     """Returns historical data from the sensor"""
+    print("hit api")
+    startDate = request.args.get('startDate')
+    granularity = request.args.get('granularity')
+
+
     context = {
-        'historical': reconfigure_data(aqm.get_last_n_measurements()),
+        'historical': reconfigure_data(aqm.getData(startDate,granularity)),
     }
     return jsonify(context)
 

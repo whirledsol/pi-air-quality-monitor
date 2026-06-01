@@ -25,12 +25,9 @@
         </div>
         <div class="row">
             <div class="col-lg-4">
-                <h6>Coming Soon...</h6>
-                <button class="btn btn-info">Refresh</button>
-            </div>
-            <div class="col-lg-4">
-                Datapoints: <input type="number" value="30"/>
-                <button class="btn btn-primary">Update</button>
+                <div title="when to begin graph">Start Date: <input id="startDate" type="date" value="" /></div>
+                <div title="Skips every n datapoints">Granularity: <input id="granularity" type="number" value="1"/></div>
+                <button id="btn-update" class="btn btn-primary">Update</button>
             </div>
         </div>
     </div>
@@ -41,28 +38,38 @@
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.3.2/chart.min.js" integrity="sha512-VCHVc5miKoln972iJPvkQrUYYq7XpxXzvqNfiul1H4aZDwGBGC0lq373KNleaB2LpnC2a/iNfE5zoRYmB4TRDQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
     <script>
-        
-        $.getJSON('/api/', function(data) {
-            var ctx = document.getElementById('historicalChart').getContext('2d');
-            var historicalChart = new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels: data.historical.labels,
-                    datasets: [data.historical.aqi, data.historical.pm10, data.historical.pm2]
-                },
-                options: {
-                    scales: {
-                        y: {
-                            beginAtZero: true
+    $(function(){
+        $('#btn-update').click(updateChart);
+
+        const updateChart = async () => {
+            const startDate = $("#startDate").val();
+            const granularity = $("#granularity").val();
+
+            console.log("updateChart",startDate,granularity)
+            const data =  await $.getJSON('/api/');
+
+
+            const ctx = document.getElementById('historicalChart').getContext('2d');
+
+            new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: data.historical.labels,
+                        datasets: [data.historical.aqi, data.historical.pm10, data.historical.pm2]
+                    },
+                    options: {
+                        scales: {
+                            y: {
+                                beginAtZero: true
+                            }
                         }
                     }
-                }
-            });
-        })
-        
-        
+                });
+            };
+
+         });
         </script>
-        
+
 
 
 </body>

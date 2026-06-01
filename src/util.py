@@ -14,8 +14,7 @@ def parse_config():
         return config
     else:
         config['DEFAULT'] = {'MeasureIntervalSeconds': '60', #take measurement every n seconds
-                     'AverageMeasurements': '5', #average n measurements before saving to redis and take latest timestamp TODO
-                     'InitialGridRangeCount': '30' #in the UI, initially show a max of measurements
+                     'serialPath': "/dev/ttyUSB0"
         }
         with open(CONFIG_FILE_NAME, 'w') as configfile:
             config.write(configfile)

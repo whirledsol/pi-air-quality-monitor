@@ -11,8 +11,8 @@ redis_client = redis.StrictRedis(host=os.environ.get('REDIS_HOST'), port=6379, d
 
 class AirQualityMonitor():
 
-    def __init__(self):
-        self.ser = serial.Serial('/dev/ttyUSB0')
+    def __init__(self, serialPath):
+        self.ser = serial.Serial(serialPath)
 
     def get_measurement(self):
         self.data = []
@@ -39,9 +39,14 @@ class AirQualityMonitor():
 
     def save_measurement_to_redis(self):
         """Saves measurement to redis db"""
-        #TODO average
         redis_client.lpush('measurements', json.dumps(self.get_measurement(), default=str))
 
     def get_last_n_measurements(self):
         """Returns the last n measurements in the list"""
         return [json.loads(x) for x in redis_client.lrange('measurements', 0, -1)]
+
+    def getData(self, startDate = None, granularity = 1):
+        """get data based on parameters"""
+        #default startDate = 24 hours ago
+        startDate = datetime.now(datetime.timezone.utc) - datetime.timedelta(hours=24) if startDate is None else startDate
+        print("StartDate",startDate)
