@@ -21,36 +21,39 @@ def parse_config():
         return config
 
 
+def pretty_timestamps(measurement):
+	timestamps = []
+	for x in measurement:
+		timestamp = x['timestamp']
+		timestamps += [timestamp.split('.')[0]]
+	return timestamps
 
-def reconfigure_data(measurements):
-        """Reconfigures data for chart.js"""
-        current = int(time.time())
-        measurements = measurements[:30]
-        measurements.reverse()
-        return {
-            'labels': [x['measurement']['timestamp'] for x in measurements],
-            'aqi': {
-                'label': 'aqi',
-                'data': [x['measurement']['aqi'] for x in measurements],
-                'backgroundColor': '#181d27',
-                'borderColor': '#181d27',
-                'borderWidth': 3,
-            },
-            'pm10': {
-                'label': 'pm10',
-                'data': [x['measurement']['pm10'] for x in measurements],
-                'backgroundColor': '#cc0000',
-                'borderColor': '#cc0000',
-                'borderWidth': 3,
-            },
-            'pm2': {
-                'label': 'pm2.5',
-                'data': [x['measurement']['pm2.5'] for x in measurements],
-                'backgroundColor': '#42C0FB',
-                'borderColor': '#42C0FB',
-                'borderWidth': 3,
-            },
-        }
+def reconfigure_data(measurement):
+    """Reconfigures data for chart.js"""
+    return {
+        'labels': pretty_timestamps(measurement),
+        'aqi': {
+            'label': 'aqi',
+            'data': [x['measurement']['aqi'] for x in measurement],
+            'backgroundColor': '#181d27',
+            'borderColor': '#181d27',
+            'borderWidth': 3,
+        },
+        'pm10': {
+            'label': 'pm10',
+            'data': [x['measurement']['pm10'] for x in measurement],
+            'backgroundColor': '#cc0000',
+            'borderColor': '#cc0000',
+            'borderWidth': 3,
+        },
+        'pm2': {
+            'label': 'pm2.5',
+            'data': [x['measurement']['pm2.5'] for x in measurement],
+            'backgroundColor': '#42C0FB',
+            'borderColor': '#42C0FB',
+            'borderWidth': 3,
+        },
+    }
 
 def convert_datetime_local(dt):
     """converts the timestamp to local"""

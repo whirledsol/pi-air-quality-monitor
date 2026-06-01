@@ -31,42 +31,6 @@ app.config['CORS_HEADERS'] = 'Content-Type'
 
 
 
-def pretty_timestamps(measurement):
-	timestamps = []
-	for x in measurement:
-		timestamp = x['measurement']['timestamp']
-		timestamps += [timestamp.split('.')[0]]
-	return timestamps
-
-def reconfigure_data(measurement):
-    """Reconfigures data for chart.js"""
-    current = int(time.time())
-    measurement = measurement[:30]
-    measurement.reverse()
-    return {
-        'labels': pretty_timestamps(measurement),
-        'aqi': {
-            'label': 'aqi',
-            'data': [x['measurement']['aqi'] for x in measurement],
-            'backgroundColor': '#181d27',
-            'borderColor': '#181d27',
-            'borderWidth': 3,
-        },
-        'pm10': {
-            'label': 'pm10',
-            'data': [x['measurement']['pm10'] for x in measurement],
-            'backgroundColor': '#cc0000',
-            'borderColor': '#cc0000',
-            'borderWidth': 3,
-        },
-        'pm2': {
-            'label': 'pm2.5',
-            'data': [x['measurement']['pm2.5'] for x in measurement],
-            'backgroundColor': '#42C0FB',
-            'borderColor': '#42C0FB',
-            'borderWidth': 3,
-        },
-    }
 
 @app.route('/')
 def index():
@@ -82,7 +46,7 @@ def api():
     startDate = request.args.get('startDate')
     granularity = request.args.get('granularity')
 
-    data = aqm.getData(startDate,granularity)
+    data = aqm.query_data(startDate,granularity)
     context = {
         'historical': reconfigure_data(data),
     }
