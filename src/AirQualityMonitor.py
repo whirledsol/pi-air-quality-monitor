@@ -50,3 +50,4 @@ class AirQualityMonitor():
         #default startDate = 24 hours ago
         startDate = datetime.now(datetime.timezone.utc) - datetime.timedelta(hours=24) if startDate is None else startDate
         print("StartDate",startDate)
+

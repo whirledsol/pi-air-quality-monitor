@@ -82,9 +82,9 @@ def api():
     startDate = request.args.get('startDate')
     granularity = request.args.get('granularity')
 
-
+    data = aqm.getData(startDate,granularity)
     context = {
-        'historical': reconfigure_data(aqm.getData(startDate,granularity)),
+        'historical': reconfigure_data(data),
     }
     return jsonify(context)
 

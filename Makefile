@@ -1,13 +1,8 @@
 PI_IP_ADDRESS=192.168.12.42
 PI_USERNAME=pi
 
-.PHONY: run
-run:
-	@docker compose up -d
 
-.PHONY: install
-install:
-	@cd scripts && bash install.sh
+
 
 .PHONY: copy
 copy:
@@ -17,6 +12,14 @@ copy:
 shell:
 	@ssh $(PI_USERNAME)@$(PI_IP_ADDRESS)
 
+.PHONY: install
+install:
+	@cd scripts && bash install.sh
+
 .PHONY: build
 build:
 	@docker compose build
+
+.PHONY: run
+run:
+	@docker compose up -d
