@@ -6,6 +6,7 @@ import serial
 import redis
 import aqi
 from statistics import mean
+from util import parse_timestamp
 
 redis_client = redis.StrictRedis(host=os.environ.get('REDIS_HOST'), port=6379, db=0)
 
@@ -40,7 +41,7 @@ class AirQualityMonitor():
         '''
         avg measurements
         '''
-        timestamp = max([parseTimestamp(x['timestamp']) for x in measurements])
+        timestamp = max([parse_timestamp(x['timestamp']) for x in measurements])
         pmtwo = mean([x["measurement"]["pm2.5"] for x in measurements])
         pmten = mean([x["measurement"]["pm10"] for x in measurements])
         myaqi = mean([x["measurement"]["aqi"] for x in measurements])
@@ -85,7 +86,7 @@ class AirQualityMonitor():
         print('raw data length',len(data))
 
         #filter by startDate
-        data = [x for x in data if parseTimestamp(x['timestamp']) >= startDate]
+        data = [x for x in data if parse_timestamp(x['timestamp']).timestamp() >= startDate.timestamp()]
 
         #granularity
         if granularity > 1 and len(data) >=granularity:
@@ -97,8 +98,3 @@ class AirQualityMonitor():
 
         return data
 
-    def parseTimestamp(self, timestampstr):
-        '''
-        parse timestamp
-        '''
-        return datetime.strptime(timestampstr,"%Y-%m-%d %H:%M:%S.%f%z")

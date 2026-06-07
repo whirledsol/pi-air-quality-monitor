@@ -4,6 +4,7 @@ import tzlocal
 import time
 import os
 import configparser
+from datetime import datetime
 
 def parse_config():
     """create or read from app.ini file"""
@@ -27,6 +28,14 @@ def pretty_timestamps(measurement):
 		timestamp = x['timestamp']
 		timestamps += [timestamp.split('.')[0]]
 	return timestamps
+
+
+def parse_timestamp(timestampstr):
+    '''
+    parse timestamp
+    '''
+    return datetime.strptime(timestampstr,"%Y-%m-%d %H:%M:%S.%f%z")
+
 
 def reconfigure_data(measurement):
     """Reconfigures data for chart.js"""
