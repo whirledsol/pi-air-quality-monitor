@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" data-bs-theme="dark">
 
 <head>
     <meta charset="utf-8">
@@ -7,15 +7,15 @@
     <meta name="description" content="">
     <title>Raspberry Pi Air Quality Monitor</title>
 
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet"
-        integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
 
 </head>
 <body>
     <div class="container">
         <div class="row">
-            <div class="col-12">
+            <div class="col-12 my-3">
                 <h1>Raspberry Pi Air Quality Monitor</h1>
+                <div class="text-muted">&copy; 2026 whirledsol et al</div>
             </div>
         </div>
         <div class="row">
@@ -28,8 +28,8 @@
                 <div title="when to begin graph">Start Date: <input id="startDate" class="form-control" type="date" value="" /></div>
                 <div title="Skips every n datapoints">Granularity: <input id="granularity" class="form-control" type="number" value="1"/></div>
                 <div class="mt-2">
-                    <button id="btn-measure" class="btn btn-warning">Measure</button>
                     <button id="btn-update" class="btn btn-primary">Refresh</button>
+                    <button id="btn-measure" class="btn btn-warning">Measure</button>
                 </div>
             </div>
         </div>
@@ -41,6 +41,7 @@
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.3.2/chart.min.js" integrity="sha512-VCHVc5miKoln972iJPvkQrUYYq7XpxXzvqNfiul1H4aZDwGBGC0lq373KNleaB2LpnC2a/iNfE5zoRYmB4TRDQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
     <script>
+    var chart = null;
     $(function(){
 
         var updateChart = async () => {
@@ -51,9 +52,14 @@
             const data =  await $.getJSON(`/api?startDate=${encodeURIComponent(startDate)}&granularity=${encodeURIComponent(granularity)}`);
             console.log("res",data)
 
-            const ctx = document.getElementById('historicalChart').getContext('2d');
+            const canvas = document.getElementById('historicalChart');
+            const ctx = canvas.getContext('2d');
 
-            new Chart(ctx, {
+            if(chart){
+                chart.destroy()
+            }
+
+            chart = new Chart(ctx, {
                     type: 'line',
                     data: {
                         labels: data.historical.labels,

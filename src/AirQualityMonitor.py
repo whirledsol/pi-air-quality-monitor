@@ -6,7 +6,7 @@ import serial
 import redis
 import aqi
 from statistics import mean
-from util import parse_timestamp
+from util import parse_timestamp, chunks
 
 redis_client = redis.StrictRedis(host=os.environ.get('REDIS_HOST'), port=6379, db=0)
 
@@ -41,7 +41,7 @@ class AirQualityMonitor():
         '''
         avg measurements
         '''
-        timestamp = max([parse_timestamp(x['timestamp']) for x in measurements])
+        timestamp = str(max([parse_timestamp(x['timestamp']) for x in measurements]))
         pmtwo = mean([x["measurement"]["pm2.5"] for x in measurements])
         pmten = mean([x["measurement"]["pm10"] for x in measurements])
         myaqi = mean([x["measurement"]["aqi"] for x in measurements])
@@ -90,7 +90,7 @@ class AirQualityMonitor():
 
         #granularity
         if granularity > 1 and len(data) >=granularity:
-            bins = chunks(data)
+            bins = chunks(data, granularity)
             data = [self.avg_measurements(bin) for bin in bins]
 
         print('data',data)
