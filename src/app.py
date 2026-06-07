@@ -56,14 +56,18 @@ def api():
 @app.route('/api/now/')
 def api_now():
     """Returns latest data from the sensor"""
+    measurement = aqm.get_measurement()
+    save = request.args.get('save')
+
+    if save == '1':
+        aqm.save_measurement_to_redis(measurement)
+
     context = {
-        'current': aqm.get_measurement(),
+        'current': measurement,
     }
+
     return jsonify(context)
     
-
-
-
 
 if __name__ == "__main__":  
     app.run(debug=True, use_reloader=False, host='0.0.0.0', port=int(os.environ.get('PORT', '8000')))

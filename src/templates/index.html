@@ -27,7 +27,10 @@
             <div class="col-lg-4">
                 <div title="when to begin graph">Start Date: <input id="startDate" class="form-control" type="date" value="" /></div>
                 <div title="Skips every n datapoints">Granularity: <input id="granularity" class="form-control" type="number" value="1"/></div>
-                <button id="btn-update" class="btn btn-primary">Update</button>
+                <div class="mt-2">
+                    <button id="btn-measure" class="btn btn-warning">Measure</button>
+                    <button id="btn-update" class="btn btn-primary">Refresh</button>
+                </div>
             </div>
         </div>
     </div>
@@ -71,6 +74,16 @@
         $('#btn-update').on('click',updateChart);
         $('#btn-update').click();
 
+
+        $('#btn-measure').on('click',async _=>{
+            const response = await fetch('/api/now?save=1')
+             if (!response.ok) {
+                throw new Error(`Response status: ${response.status}`);
+            }
+
+            const result = await response.json();
+            console.log('measuring response...',result);
+        });
     });
     </script>
 

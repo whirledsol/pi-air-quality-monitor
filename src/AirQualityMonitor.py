@@ -5,6 +5,7 @@ from datetime import datetime,timezone,timedelta
 import serial
 import redis
 import aqi
+from statistics import mean
 
 redis_client = redis.StrictRedis(host=os.environ.get('REDIS_HOST'), port=6379, db=0)
 
@@ -21,40 +22,83 @@ class AirQualityMonitor():
         for index in range(0,10):
             datum = self.ser.read()
             self.data.append(datum)
-        self.pmtwo = int.from_bytes(b''.join(self.data[2:4]), byteorder='little') / 10
-        self.pmten = int.from_bytes(b''.join(self.data[4:6]), byteorder='little') / 10
-        self.aqi = aqi.to_aqi([(aqi.POLLUTANT_PM25, str(self.pmtwo)),
-                            (aqi.POLLUTANT_PM10, str(self.pmten))
-                            (aqi.POLLUTANT_O3_8H, '1') #static because not recorded but needed to make the aqi algorithm make sense
-                            ])
-        self.aqi = float(self.aqi)
 
-        self.meas = {
-            "pm2.5": self.pmtwo,
-            "pm10": self.pmten,
-            "aqi": self.aqi,
+        timestamp = datetime.now(timezone.utc)
+        pmtwo = (int.from_bytes(b''.join(self.data[2:4]), byteorder='little') / 10) or 0
+        pmten = (int.from_bytes(b''.join(self.data[4:6]), byteorder='little') / 10) or 0
+        myaqi = aqi.to_aqi([
+                            (aqi.POLLUTANT_PM25, str(pmtwo)),
+                            (aqi.POLLUTANT_PM10, str(pmten))
+                        ])
+        myaqi = float(myaqi)
+
+        print('get_measurement',pmtwo,pmten)
+
+        return self.build_measurement(timestamp,pmtwo,pmten,myaqi)
+
+    def avg_measurements(self, measurements):
+        '''
+        avg measurements
+        '''
+        timestamp = max([parseTimestamp(x['timestamp']) for x in measurements])
+        pmtwo = mean([x["measurement"]["pm2.5"] for x in measurements])
+        pmten = mean([x["measurement"]["pm10"] for x in measurements])
+        myaqi = mean([x["measurement"]["aqi"] for x in measurements])
+        return self.build_measurement(timestamp,pmtwo,pmten,myaqi)
+
+    def build_measurement(self,timestamp,pmtwo,pmten,myaqi):
+        '''
+        builds the model
+        '''
+        meas = {
+            'pm2.5': pmtwo,
+            'pm10': pmten,
+            'aqi': myaqi
         }
         return {
-            "timestamp": datetime.now(timezone.utc),
-            'measurement': self.meas
+            'timestamp': timestamp,
+            'measurement': meas
         }
 
-
-    def save_measurement_to_redis(self):
+    def save_measurement_to_redis(self, measurement = None):
         """Saves measurement to redis db"""
-        redis_client.lpush('measurements', json.dumps(self.get_measurement(), default=str))
+        measurement = measurement or self.get_measurement()
+        redis_client.lpush('measurements', json.dumps(measurement, default=str))
 
     def get_redis_measurements(self):
         """just gets all the data"""
-        return [json.loads(x) for x in redis_client.lrange('measurements', 0, -1)]
+        data = [json.loads(x) for x in redis_client.lrange('measurements', 0, -1)]
+        data.reverse()
+        return data
 
     def query_data(self, startDate = None, granularity = 1):
         """get data based on parameters"""
-        #default startDate = 24 hours ago
+
+        #clean inputs
+        granularity = int(granularity)
+        yesterday = datetime.now(timezone.utc) - timedelta(hours=24)
+        startDate = yesterday if (startDate or '') == '' else datetime.strptime(startDate, "%Y-%m-%d") #default startDate = 24 hours ago
         print('getData',startDate,granularity)
-        startDate = datetime.now(timezone.utc) - timedelta(hours=24) if startDate is None else startDate
-        print("StartDate",startDate)
+
+        #get all data
         data = self.get_redis_measurements()
-        print('data length',len(data))
+        print('raw data length',len(data))
+
+        #filter by startDate
+        data = [x for x in data if parseTimestamp(x['timestamp']) >= startDate]
+
+        #granularity
+        if granularity > 1 and len(data) >=granularity:
+            bins = chunks(data)
+            data = [self.avg_measurements(bin) for bin in bins]
+
+        print('data',data)
+        print('final data length',len(data))
+
         return data
 
+    def parseTimestamp(self, timestampstr):
+        '''
+        parse timestamp
+        '''
+        return datetime.strptime(timestampstr,"%Y-%m-%d %H:%M:%S.%f%z")

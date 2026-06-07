@@ -61,3 +61,13 @@ def convert_datetime_local(dt):
     local_tz = tzlocal.get_localzone() 
     print(f'Your timezone is {local_tz}.')
     return local_tz.localize(dt)
+
+def chunks(l, n):
+    '''
+    list to list of lists of size n
+    '''
+    newList = []
+
+    for i in range(0, len(l), n):
+        newList.append(l[i:i+n])
+    return newList
