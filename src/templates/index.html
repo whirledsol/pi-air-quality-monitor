@@ -7,13 +7,13 @@
     <meta name="description" content="">
     <title>Raspberry Pi Air Quality Monitor</title>
 
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.        3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
 
 </head>
 <body>
-    <div class="container">
+    <div class="container-fluid">
         <div class="row">
-            <div class="col-12 my-3">
+            <div class="col-12 my-                               3">
                 <h1>Raspberry Pi Air Quality Monitor</h1>
                 <div class="text-muted">&copy; 2026 whirledsol et al</div>
             </div>
@@ -23,7 +23,7 @@
                 <canvas id="historicalChart" width="400" height="200"></canvas>
             </div>
         </div>
-        <div class="row mt-3">
+        <div class="row mt-                                      3">
             <div class="col-lg-4">
                 <div title="when to begin graph">Start Date: <input id="startDate" class="form-control" type="date" value="" /></div>
                 <div title="Skips every n datapoints">Granularity: <input id="granularity" class="form-control" type="number" value="1"/></div>
@@ -35,9 +35,9 @@
         </div>
     </div>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"
-        integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" crossorigin="anonymous">
+        integrity="sha                                           384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" crossorigin="anonymous">
     </script>
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/   3.5.1/jquery.min.js"></script>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.3.2/chart.min.js" integrity="sha512-VCHVc5miKoln972iJPvkQrUYYq7XpxXzvqNfiul1H4aZDwGBGC0lq373KNleaB2LpnC2a/iNfE5zoRYmB4TRDQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
     <script>
@@ -59,6 +59,11 @@
                 chart.destroy()
             }
 
+        const dataLength = data?.historical?.labels?.length ?? 0;
+        const xTickSpacing = parseInt(Math.ceil(dataLength / 10))
+
+        //console.log('xTickSpacing',dataLength,xTickSpacing)
+
             chart = new Chart(ctx, {
                     type: 'line',
                     data: {
@@ -69,10 +74,19 @@
                         scales: {
                             y: {
                                 beginAtZero: true
+                            },
+                            x:{
+                                ticks: {
+                                    callback: function(val, index) {
+                                        //console.log('val',val);
+                                        let label = this.getLabelForValue(val);
+                                        label = new Date(label+'Z').toLocaleString()
+                                        return index % xTickSpacing === 0 ? label : '';
+                                    }
+                                }
                             }
                         }
                     }
-                });
             };
 
 
@@ -83,7 +97,7 @@
 
         $('#btn-measure').on('click',async _=>{
             const response = await fetch('/api/now?save=1')
-             if (!response.ok) {
+            if (!response.ok) {
                 throw new Error(`Response status: ${response.status}`);
             }
 
