@@ -1,113 +1,146 @@
 <!doctype html>
 <html lang="en" data-bs-theme="dark">
-
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="description" content="">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content="" />
     <title>Raspberry Pi Air Quality Monitor</title>
 
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.        3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+      integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB"
+      crossorigin="anonymous"
+    />
+  </head>
 
-</head>
-<body>
+  <body>
     <div class="container-fluid">
-        <div class="row">
-            <div class="col-12 my-                               3">
-                <h1>Raspberry Pi Air Quality Monitor</h1>
-                <div class="text-muted">&copy; 2026 whirledsol et al</div>
-            </div>
+      <div class="row">
+        <div class="col-12 my-3">
+          <h1>Raspberry Pi Air Quality Monitor</h1>
+          <div class="text-muted">&copy; 2026 whirledsol et al</div>
         </div>
-        <div class="row">
-            <div class="col-12">
-                <canvas id="historicalChart" width="400" height="200"></canvas>
-            </div>
+      </div>
+      <div class="row">
+        <div class="col-12">
+          <canvas id="historicalChart" width="400" height="200"></canvas>
         </div>
-        <div class="row mt-                                      3">
-            <div class="col-lg-4">
-                <div title="when to begin graph">Start Date: <input id="startDate" class="form-control" type="date" value="" /></div>
-                <div title="Skips every n datapoints">Granularity: <input id="granularity" class="form-control" type="number" value="1"/></div>
-                <div class="mt-2">
-                    <button id="btn-update" class="btn btn-primary">Refresh</button>
-                    <button id="btn-measure" class="btn btn-warning">Measure</button>
-                </div>
-            </div>
+      </div>
+      <div class="row mt-3">
+        <div class="col-lg-4">
+          <div title="when to begin graph">
+            Start Date:
+            <input
+              id="startDate"
+              class="form-control"
+              type="datetime-local"
+              value=""
+            />
+          </div>
+          <div title="Skips every n datapoints">
+            Granularity (auto = 0):
+            <input
+              id="granularity"
+              class="form-control"
+              type="number"
+              value="0"
+            />
+          </div>
+          <div class="mt-2">
+            <button id="btn-update" class="btn btn-primary">Refresh</button>
+            <button id="btn-measure" class="btn btn-warning">Measure</button>
+          </div>
         </div>
+      </div>
     </div>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"
-        integrity="sha                                           384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" crossorigin="anonymous">
-    </script>
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/   3.5.1/jquery.min.js"></script>
+    <script
+      src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"
+      integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM"
+      crossorigin="anonymous"
+    ></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.3.2/chart.min.js" integrity="sha512-VCHVc5miKoln972iJPvkQrUYYq7XpxXzvqNfiul1H4aZDwGBGC0lq373KNleaB2LpnC2a/iNfE5zoRYmB4TRDQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script
+      src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.3.2/chart.min.js"
+      integrity="sha512-VCHVc5miKoln972iJPvkQrUYYq7XpxXzvqNfiul1H4aZDwGBGC0lq373KNleaB2LpnC2a/iNfE5zoRYmB4TRDQ=="
+      crossorigin="anonymous"
+      referrerpolicy="no-referrer"
+    ></script>
     <script>
-    var chart = null;
-    $(function(){
-
+      var chart = null;
+      $(function () {
         var updateChart = async () => {
-            const startDate = $("#startDate").val();
-            const granularity = $("#granularity").val();
+          const startDate = $("#startDate").val();
+          const granularity = $("#granularity").val();
 
-            console.log("updateChart",startDate,granularity)
-            const data =  await $.getJSON(`/api?startDate=${encodeURIComponent(startDate)}&granularity=${encodeURIComponent(granularity)}`);
-            console.log("res",data)
+          console.log("updateChart", startDate, granularity);
+          const data = await $.getJSON(
+            `/api?startDate=${encodeURIComponent(startDate)}&granularity=${encodeURIComponent(granularity)}`,
+          );
+          console.log("res", data);
 
-            const canvas = document.getElementById('historicalChart');
-            const ctx = canvas.getContext('2d');
+          const canvas = document.getElementById("historicalChart");
+          const ctx = canvas.getContext("2d");
 
-            if(chart){
-                chart.destroy()
-            }
+          if (chart) {
+            chart.destroy();
+          }
 
-        const dataLength = data?.historical?.labels?.length ?? 0;
-        const xTickSpacing = parseInt(Math.ceil(dataLength / 10))
+          //get data length
+          const dataLength = data?.historical?.labels?.length ?? 0;
 
-        //console.log('xTickSpacing',dataLength,xTickSpacing)
+          //dynamic tick spacing to show up to 10 labels
+          const xTickSpacing = parseInt(Math.ceil(dataLength / 10));
 
-            chart = new Chart(ctx, {
-                    type: 'line',
-                    data: {
-                        labels: data.historical.labels,
-                        datasets: [data.historical.aqi, data.historical.pm10, data.historical.pm2]
+          //console.log("xTickSpacing", dataLength, xTickSpacing);
+
+          //convert labels to local
+          const labels = data.historical.labels.map((x) =>
+            new Date(x + "Z").toLocaleString(),
+          );
+
+          chart = new Chart(ctx, {
+            type: "line",
+            data: {
+              labels: labels,
+              datasets: [
+                data.historical.aqi,
+                data.historical.pm10,
+                data.historical.pm2,
+              ],
+            },
+            options: {
+              scales: {
+                y: {
+                  beginAtZero: true,
+                },
+                x: {
+                  ticks: {
+                    callback: function (val, index) {
+                      const label = this.getLabelForValue(val);
+                      return index % xTickSpacing === 0 ? label : "";
                     },
-                    options: {
-                        scales: {
-                            y: {
-                                beginAtZero: true
-                            },
-                            x:{
-                                ticks: {
-                                    callback: function(val, index) {
-                                        //console.log('val',val);
-                                        let label = this.getLabelForValue(val);
-                                        label = new Date(label+'Z').toLocaleString()
-                                        return index % xTickSpacing === 0 ? label : '';
-                                    }
-                                }
-                            }
-                        }
-                    }
-            };
+                  },
+                },
+              },
+            },
+          });
+        };
 
+        $("#btn-update").on("click", updateChart);
+        $("#btn-update").click();
 
+        $("#btn-measure").on("click", async (_) => {
+          const response = await fetch("/api/now?save=1");
+          if (!response.ok) {
+            throw new Error(`Response status: ${response.status}`);
+          }
 
-        $('#btn-update').on('click',updateChart);
-        $('#btn-update').click();
-
-
-        $('#btn-measure').on('click',async _=>{
-            const response = await fetch('/api/now?save=1')
-            if (!response.ok) {
-                throw new Error(`Response status: ${response.status}`);
-            }
-
-            const result = await response.json();
-            console.log('measuring response...',result);
+          const result = await response.json();
+          console.log("measuring response...", result);
         });
-    });
+      });
     </script>
-
-
-
-</body>
+  </body>
 </html>

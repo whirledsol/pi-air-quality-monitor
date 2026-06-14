@@ -9,3 +9,4 @@ configparser
 pytz
 tzlocal
 pyserial
+python-dateutil
