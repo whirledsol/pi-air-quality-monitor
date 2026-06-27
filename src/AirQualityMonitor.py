@@ -74,12 +74,11 @@ class AirQualityMonitor():
 
     def get_redis_measurements(self):
         """just gets all the data"""
-        data = [json.loads(x)
-                for x in redis_client.lrange('measurements', 0, -1)]
+        data = [json.loads(x) for x in redis_client.lrange('measurements', 0, -1)]
         data.reverse()
         return data
 
-    def query_data(self, startDate=None, granularity=0):
+    def query_data(self, timeframeHours=12):
         """get data based on parameters"""
 
         # get all data
@@ -88,23 +87,20 @@ class AirQualityMonitor():
 
 
         # clean inputs -- startDate
-        yesterday = datetime.now(timezone.utc) - timedelta(hours=24)
-        startDate = yesterday if (startDate or '') == '' else parser.parse(startDate)  # default startDate = 24 hours ago
+        timeframeHours = int(timeframeHours)
+        print('timeframeHours',timeframeHours,type(timeframeHours))
+        startDate = datetime.now(timezone.utc) - timedelta(hours=timeframeHours)
 
-        # clean inputs -- granularity
-        if granularity in [None,"","0",0]:
-            # auto granularity
-            MAX_DATA_PTS = 100
-            granularity = math.ceil(len(data)/MAX_DATA_PTS)
-        granularity = int(granularity)
+        # filter by startDate
+        data = [x for x in data if parse_timestamp(x['timestamp']).timestamp() >= startDate.timestamp()]
+
+        # auto granularity
+        MAX_DATA_PTS = 100
+        granularity = int(math.ceil(len(data)/MAX_DATA_PTS))
 
         #show params
         print('getData', startDate, granularity)
 
-
-        # filter by startDate
-        data = [x for x in data if parse_timestamp(
-            x['timestamp']).timestamp() >= startDate.timestamp()]
 
         # apply granularity
         if granularity > 1 and len(data) >= granularity:

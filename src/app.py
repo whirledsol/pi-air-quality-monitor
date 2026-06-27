@@ -43,10 +43,9 @@ def index():
 def api():
     """Returns historical data from the sensor"""
     print("hit api")
-    startDate = request.args.get('startDate')
-    granularity = request.args.get('granularity')
+    timeframeHours = request.args.get('timeframeHours')
 
-    data = aqm.query_data(startDate,granularity)
+    data = aqm.query_data(timeframeHours)
     context = {
         'historical': reconfigure_data(data),
     }
