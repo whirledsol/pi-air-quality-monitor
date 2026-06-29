@@ -37,6 +37,15 @@ def index():
     """Index page for the application"""
     return render_template('index.html')
 
+@app.route('/graph')
+def index():
+    """Index page for the application"""
+    return render_template('graph.html')
+
+@app.route('/monitor')
+def index():
+    """Index page for the application"""
+    return render_template('monitor.html')
 
 @app.route('/api/')
 @cross_origin()
